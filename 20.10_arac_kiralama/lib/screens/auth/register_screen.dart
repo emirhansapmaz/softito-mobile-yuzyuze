@@ -1,13 +1,23 @@
+// Flutter materyal tasarım kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Uygulama tema renklerini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Kimlik doğrulama ve kullanıcı yönetim servisini içe aktarıyoruz.
 import '../../providers/auth_provider.dart';
+// Kullanıcı sözleşmesi açılır penceresini içe aktarıyoruz.
 import '../../widgets/contract_dialog.dart';
+// Özel buton bileşenlerini içe aktarıyoruz.
 import '../../widgets/custom_button.dart';
+// Özel metin giriş kutusu bileşenini içe aktarıyoruz.
 import '../../widgets/custom_text_field.dart';
+// Logo bileşenini içe aktarıyoruz.
 import '../../widgets/sem_logo.dart';
 
+/// Yeni müşteri hesabı oluşturma, NFC ile ehliyet okutma ve sözleşme onayı ekranı.
 class RegisterScreen extends StatefulWidget {
+  /// RegisterScreen kurucu metodu (Constructor)
   const RegisterScreen({super.key});
 
   @override
@@ -15,22 +25,42 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  /// Formun doğruluk durumunu denetleyen global anahtar
   final _formKey = GlobalKey<FormState>();
 
+  /// Ad giriş alanı kontrolcüsü
   final _firstNameController = TextEditingController();
+  
+  /// Soyad giriş alanı kontrolcüsü
   final _lastNameController = TextEditingController();
+  
+  /// E-posta giriş alanı kontrolcüsü
   final _emailController = TextEditingController();
+  
+  /// T.C. Kimlik No giriş alanı kontrolcüsü
   final _tcNoController = TextEditingController();
+  
+  /// Sürücü Belgesi / Ehliyet seri numarası kontrolcüsü
   final _drivingLicenseController = TextEditingController();
+  
+  /// Şifre giriş alanı kontrolcüsü
   final _passwordController = TextEditingController();
 
+  /// Şifre karakterlerinin gizli olup olmadığını belirten bayrak
   bool _isObscurePassword = true;
+  
+  /// Kullanıcı sözleşmesinin onaylanıp onaylanmadığı durumu
   bool _isAgreementAccepted = false;
+  
+  /// NFC okuma simülasyonunun devam edip etmediğini belirten bayrak
   bool _isNfcSimulating = false;
+  
+  /// Ehliyetin NFC ile doğrulanıp doğrulanmadığını belirten bayrak
   bool _isNfcVerified = false;
 
   @override
   void dispose() {
+    // Form denetleyicilerini bellekten siliyoruz.
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -40,19 +70,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // NFC İle Ehliyet Okuma Simülasyonu
+  // ==========================================
+  // NFC İLE EHLİYET OKUMA SİMÜLASYONU
+  // ==========================================
+  /// Yeni çipli sürücü belgelerini telefonun NFC anteniyle okuma sürecini simüle eder.
   void _simulateNfcRead() {
     setState(() => _isNfcSimulating = true);
 
+    // Ekranda NFC okuma animasyonu ve yönlendirme içeren bir AlertDialog açıyoruz.
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Kullanıcı dışarı tıklayıp kapatamaz.
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 16),
+            // NFC anten simgesi ve yuvarlak zemin
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -77,6 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
             const SizedBox(height: 20),
+            // İşlem sürdüğünü belirten yükleniyor göstergesi
             const SizedBox(
               width: 24,
               height: 24,
@@ -87,20 +123,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
 
-    // 2 saniye sonra NFC okumayı tamamla ve bilgileri doldur
+    // 2 saniye sonra NFC okumayı tamamlayıp sahte çip verilerini form alanlarına otomatik dolduruyoruz.
     Future.delayed(const Duration(milliseconds: 2000), () {
       if (!mounted) return;
-      Navigator.of(context).pop(); // Diyaloğu kapat
+      Navigator.of(context).pop(); // NFC diyaloğunu kapatıyoruz.
 
       setState(() {
         _isNfcSimulating = false;
         _isNfcVerified = true;
+        // Eğer ad-soyad boşsa çipten okunan değerleri giriyoruz.
         if (_firstNameController.text.isEmpty) _firstNameController.text = 'Emirhan';
         if (_lastNameController.text.isEmpty) _lastNameController.text = 'Sapmaz';
         _tcNoController.text = '29384756102';
         _drivingLicenseController.text = 'TR-34-889921';
       });
 
+      // Başarılı doğrulama bildirim çubuğu (SnackBar) gösteriyoruz.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -120,7 +158,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  // Kullanıcı Sözleşmesi Modalı
+  // ==========================================
+  // KULLANICI SÖZLEŞMESİ PENCERESİ
+  // ==========================================
+  /// Sözleşme modalını açar ve kullanıcı onaylarsa onay kutusunu işaretler.
   Future<void> _openContractModal() async {
     final accepted = await ContractDialog.show(context);
     if (accepted == true) {
@@ -130,12 +171,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // Kayıt İşlemi
+  // ==========================================
+  // KAYIT TAMAMLAMA İŞLEMİ
+  // ==========================================
+  /// Formu denetler, sözleşme kontrolü yapar ve yeni hesabı oluşturur.
   Future<void> _handleRegister() async {
+    // Form doğrulama kontrolü
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // Sözleşme onaylanmamışsa hata mesajı verip işlemi engelliyoruz.
     if (!_isAgreementAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -147,8 +193,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // Ad ve soyadı tek bir tam ad dizesi olarak birleştiriyoruz.
     final fullName = '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}';
 
+    // Provider üzerinden kayıt işlemini çağırıyoruz.
     final success = await authProvider.register(
       fullName: fullName,
       email: _emailController.text,
@@ -158,6 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       isNfcVerified: _isNfcVerified,
     );
 
+    // Kayıt başarılıysa kullanıcıya bilgi verip giriş ekranına döndürüyoruz.
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -166,18 +215,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.of(context).pop(); // Login ekranına dön
+      Navigator.of(context).pop(); // Login ekranına geri dönüş
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Aktif temanın koyu mod durumunu kontrol ediyoruz.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const SemLogo(fontSize: 22),
+        // Geri dönüş butonu
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).pop(),
@@ -191,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Başlık
+                // Ekran Başlığı ve Açıklaması
                 Text(
                   'Yeni Hesap Oluştur',
                   style: TextStyle(
@@ -210,7 +261,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // NFC Ehliyet Okutma Kartı / Butonu
+                // ==========================================
+                // NFC İLE EHLİYET DOĞRULAMA KARTI
+                // ==========================================
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -228,6 +281,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: Row(
                     children: [
+                      // Durum ikonu (Tik veya NFC dalgaları)
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -241,6 +295,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
+                      // Bilgilendirme metinleri
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,6 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ],
                         ),
                       ),
+                      // NFC Okutma veya Yenileme Butonu
                       OutlinedButton.icon(
                         onPressed: _isNfcSimulating ? null : _simulateNfcRead,
                         icon: const Icon(Icons.contactless_outlined, size: 18),
@@ -287,9 +343,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Ad & Soyad
+                // ==========================================
+                // AD VE SOYAD ALANLARI
+                // ==========================================
                 Row(
                   children: [
+                    // Ad kutusu
                     Expanded(
                       child: CustomTextField(
                         controller: _firstNameController,
@@ -304,6 +363,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Soyad kutusu
                     Expanded(
                       child: CustomTextField(
                         controller: _lastNameController,
@@ -320,7 +380,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // T.C. Kimlik Numarası (Regex ve 11 hane kontrolü)
+                // ==========================================
+                // T.C. KİMLİK NUMARASI ALANI
+                // ==========================================
+                // 11 hane ve sıfır ile başlamama kuralı regex ile denetlenir.
                 CustomTextField(
                   controller: _tcNoController,
                   labelText: 'T.C. Kimlik Numarası',
@@ -340,7 +403,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Ehliyet Bilgileri
+                // ==========================================
+                // SÜRÜCÜ BELGESİ / EHLİYET NUMARASI
+                // ==========================================
                 CustomTextField(
                   controller: _drivingLicenseController,
                   labelText: 'Sürücü Belgesi / Ehliyet No',
@@ -359,7 +424,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // E-posta
+                // ==========================================
+                // E-POSTA ALANI
+                // ==========================================
                 CustomTextField(
                   controller: _emailController,
                   labelText: 'E-posta Adresi',
@@ -379,7 +446,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Şifre
+                // ==========================================
+                // ŞİFRE ALANI
+                // ==========================================
                 CustomTextField(
                   controller: _passwordController,
                   labelText: 'Şifre',
@@ -408,7 +477,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Kullanıcı Sözleşmesi Checkbox & Link
+                // ==========================================
+                // KULLANICI SÖZLEŞMESİ ONAY KUTUSU (Checkbox)
+                // ==========================================
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -453,7 +524,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Kayıt Ol Butonu (Sözleşme onaylanmadan pasif)
+                // ==========================================
+                // KAYIT OL BUTONU (Sözleşme onaysızsa devre dışı)
+                // ==========================================
                 CustomElevatedButton(
                   text: 'Kayıt Ol',
                   isLoading: authProvider.isLoading,
@@ -462,7 +535,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Zaten hesabı var mı?
+                // ==========================================
+                // GİRİŞ YAP EKRANINA GERİ DÖNÜŞ BAĞLANTISI
+                // ==========================================
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

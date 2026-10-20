@@ -1,17 +1,31 @@
+// Flutter materyal arayüz kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Tarih formatlama işlemleri için intl kütüphanesini içe aktarıyoruz.
 import 'package:intl/intl.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Uygulama tema renklerini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Araç veri modelini içe aktarıyoruz.
 import '../../models/car.dart';
+// Rezervasyon veri modelini ve durum enum'ını içe aktarıyoruz.
 import '../../models/reservation.dart';
+// Oturum yönetimi Provider'ını içe aktarıyoruz.
 import '../../providers/auth_provider.dart';
+// Tema tercihi Provider'ını içe aktarıyoruz.
 import '../../providers/theme_provider.dart';
+// Araç ve rezervasyon yönetim Provider'ını içe aktarıyoruz.
 import '../../providers/vehicle_provider.dart';
+// Logo bileşenini içe aktarıyoruz.
 import '../../widgets/sem_logo.dart';
+// Çıkış yapıldığında dönülecek giriş ekranını içe aktarıyoruz.
 import '../auth/login_screen.dart';
+// Araç ekleme ve düzenleme ekranını içe aktarıyoruz.
 import 'admin_add_edit_vehicle_screen.dart';
 
+/// Sistem yöneticisinin (Admin) filoyu yönettiği, rezervasyonları onaylayıp reddettiği ve muayene/bakımları takip ettiği yönetim paneli ekranı.
 class AdminDashboardScreen extends StatefulWidget {
+  /// AdminDashboardScreen kurucu metodu (Constructor)
   const AdminDashboardScreen({super.key});
 
   @override
@@ -20,21 +34,27 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with SingleTickerProviderStateMixin {
+  /// 3 sekme (Araçlar, Talepler, Muayene & Bakım) arasındaki geçişi kontrol eden TabController
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    // 3 adet sekme tanımlıyoruz.
     _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
+    // Controller nesnesini bellekten siliyoruz.
     _tabController.dispose();
     super.dispose();
   }
 
-  // Araç Silme Onay Diyaloğu (AlertDialog Ödev Kriteri)
+  // ==========================================
+  // ARAÇ SİLME ONAY DİYALOĞU (AlertDialog)
+  // ==========================================
+  /// Bir aracı silmeden önce yöneticiden onay isteyen AlertDialog bileşeni
   void _confirmDeleteCar(BuildContext context, Car car) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -65,10 +85,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ),
         ),
         actions: [
+          // İptal Butonu
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('İptal'),
           ),
+          // Evet, Sil Onay Butonu
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
@@ -76,6 +98,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
+              // Provider üzerinden aracı siliyoruz.
               Provider.of<VehicleProvider>(context, listen: false).deleteCar(car.id);
               Navigator.of(dialogContext).pop();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -101,6 +124,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
     return Scaffold(
       appBar: AppBar(
+        // Başlık: Logo ve kırmızı ADMIN rozeti
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -124,6 +148,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ],
         ),
         actions: [
+          // Tema değiştirme butonu
           IconButton(
             icon: Icon(
               themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
@@ -131,6 +156,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             onPressed: () => themeProvider.toggleTheme(),
             tooltip: 'Temayı Değiştir',
           ),
+          // Çıkış yap butonu
           IconButton(
             icon: const Icon(Icons.logout_rounded),
             onPressed: () {
@@ -143,20 +169,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             tooltip: 'Çıkış Yap',
           ),
         ],
+        // 3 Ana Yönetim Sekmesi (TabBar)
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primaryBlue,
           labelColor: AppColors.primaryBlue,
           unselectedLabelColor: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
           tabs: [
+            // 1. Sekme: Araçlar Listesi
             Tab(
               icon: const Icon(Icons.directions_car_rounded, size: 20),
               text: 'Araçlar (${vp.cars.length})',
             ),
+            // 2. Sekme: Müşteri Rezervasyon Talepleri
             Tab(
               icon: const Icon(Icons.book_online_rounded, size: 20),
               text: 'Talepler (${vp.reservations.length})',
             ),
+            // 3. Sekme: Muayene ve Bakım Takvimi
             Tab(
               icon: const Icon(Icons.build_circle_rounded, size: 20),
               text: 'Muayene & Bakım',
@@ -164,6 +194,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ],
         ),
       ),
+      // Sekmelerin içeriği
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -172,6 +203,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           _buildMaintenanceTab(context, isDark, vp),
         ],
       ),
+      // İlk sekmede iken (Araçlar) sağ altta "Yeni Araç Ekle" butonu gösteriyoruz.
       floatingActionButton: _tabController.index == 0
           ? FloatingActionButton.extended(
               onPressed: () {
@@ -188,7 +220,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  // 1. Sekme: Araç Listesi ve Yönetimi
+  // ==========================================
+  // 1. SEKME: ARAÇ LİSTESİ VE YÖNETİMİ
+  // ==========================================
+  /// Filodaki araçları kartlar halinde listeler; düzenleme ve silme aksiyonları sunar.
   Widget _buildCarsTab(BuildContext context, bool isDark, VehicleProvider vp) {
     final cars = vp.cars;
 
@@ -207,6 +242,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
+                // Küçük Araç Görseli
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
@@ -223,6 +259,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
                 const SizedBox(width: 14),
+                // Araç Temel Bilgileri
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,6 +288,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             ),
                           ),
                           const SizedBox(width: 8),
+                          // Müsait / Kirada Rozeti
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -273,10 +311,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     ],
                   ),
                 ),
-                // Düzenle & Sil Butonları
+                // Düzenle & Sil Aksiyon Butonları
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Düzenle Butonu
                     IconButton(
                       icon: const Icon(Icons.edit_outlined, color: AppColors.primaryBlue, size: 20),
                       onPressed: () {
@@ -288,6 +327,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       },
                       tooltip: 'Düzenle',
                     ),
+                    // Sil Butonu (Onay dialogu açar)
                     IconButton(
                       icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
                       onPressed: () => _confirmDeleteCar(context, car),
@@ -303,11 +343,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  // 2. Sekme: Rezervasyon İstekleri ve Yönetimi
+  // ==========================================
+  // 2. SEKME: REZERVASYON İSTEKLERİ VE YÖNETİMİ
+  // ==========================================
+  /// Müşterilerin gönderdiği rezervasyon taleplerini listeler, onaylama veya reddetme imkanı sağlar.
   Widget _buildReservationsTab(BuildContext context, bool isDark, VehicleProvider vp) {
     final reservations = vp.reservations;
     final dateFormat = DateFormat('dd.MM.yyyy');
 
+    // Henüz talep yoksa boş kutu mesajı gösteriyoruz.
     if (reservations.isEmpty) {
       return Center(
         child: Column(
@@ -336,6 +380,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       );
     }
 
+    // Rezervasyonları listeliyoruz.
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: reservations.length,
@@ -378,6 +423,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                   ),
                 ),
+                // Şehirlerarası seyahat varsa rota ve ek bedel bilgisi
                 if (res.isIntercity)
                   Text(
                     'Şehir Dışı: ${res.destinationCity} (+${res.extraDistanceCharge.toStringAsFixed(0)} ₺)',
@@ -399,10 +445,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         color: AppColors.primaryBlue,
                       ),
                     ),
-                    // Onayla / Reddet Butonları (Eğer durum bekliyor ise)
+                    // Eğer talep beklemedeyse Onayla ve Reddet butonlarını gösteriyoruz
                     if (res.status == ReservationStatus.pending)
                       Row(
                         children: [
+                          // Reddet Butonu
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.error,
@@ -419,6 +466,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             child: const Text('Reddet', style: TextStyle(fontSize: 12)),
                           ),
                           const SizedBox(width: 8),
+                          // Onayla Butonu
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.success,
@@ -446,6 +494,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
+  // ==========================================
+  // REZERVASYON DURUMU ROZETİ ÜRETİCİSİ
+  // ==========================================
+  /// Rezervasyon durumuna göre (Bekliyor, Onaylandı, Reddedildi, Tamamlandı) renkli rozet çizer.
   Widget _buildReservationStatusBadge(ReservationStatus status) {
     Color color;
     String label;
@@ -482,7 +534,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  // 3. Sekme: Muayene ve Bakım Takip Çizelgesi
+  // ==========================================
+  // 3. SEKME: MUAYENE VE BAKIM TAKİP ÇİZELGESİ
+  // ==========================================
+  /// Araçların gelecek muayene ve son bakım tarihlerini gün farkına göre (Acil, Yaklaşan, İyi) analiz edip listeler.
   Widget _buildMaintenanceTab(BuildContext context, bool isDark, VehicleProvider vp) {
     final cars = vp.cars;
     final now = DateTime.now();
@@ -493,8 +548,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       itemCount: cars.length,
       itemBuilder: (context, index) {
         final car = cars[index];
+        // Muayeneye kalan gün sayısını hesaplıyoruz.
         final daysToInspection = car.nextInspectionDate.difference(now).inDays;
+        // 15 günden az kaldıysa Acil Muayene (Kırmızı)
         final isUrgent = daysToInspection <= 15;
+        // 15 ile 60 gün arası Yaklaşan Muayene (Turuncu)
         final isWarning = daysToInspection > 15 && daysToInspection <= 60;
 
         return Card(
@@ -524,6 +582,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                     ),
                     const SizedBox(width: 8),
+                    // Acil / Yaklaşan / Durum İyi rozeti
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
@@ -556,6 +615,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 4),
+                // Gelecek muayene tarihi
                 Row(
                   children: [
                     Icon(
@@ -575,6 +635,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ],
                 ),
                 const SizedBox(height: 4),
+                // Son periyodik bakım tarihi
                 Row(
                   children: [
                     const Icon(Icons.history_rounded, size: 15, color: Colors.grey),
@@ -589,7 +650,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Bakım / Muayene Güncelleme Butonları
+                // Muayene Yenile (+1 Yıl) Butonu
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -601,6 +662,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       icon: const Icon(Icons.check_circle_outline, size: 16),
                       label: const Text('Muayene Yenile (+1 Yıl)', style: TextStyle(fontSize: 11.5)),
                       onPressed: () {
+                        // Muayene tarihine 365 gün ekleyip aracı güncelliyoruz.
                         final updated = car.copyWith(
                           nextInspectionDate: car.nextInspectionDate.add(const Duration(days: 365)),
                         );

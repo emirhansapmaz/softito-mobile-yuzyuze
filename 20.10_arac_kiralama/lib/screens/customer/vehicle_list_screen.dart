@@ -1,32 +1,48 @@
+// Flutter materyal arayüz kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Uygulama tema renklerini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Kategori veri modelini içe aktarıyoruz.
 import '../../models/category.dart';
+// Araç verilerini, arama, filtreleme ve sıralama mantığını yöneten Provider'ı içe aktarıyoruz.
 import '../../providers/vehicle_provider.dart';
+// Araç kartı bileşenini içe aktarıyoruz.
 import '../../widgets/vehicle_card.dart';
+// Araca tıklandığında gidilecek detay ekranını içe aktarıyoruz.
 import 'vehicle_detail_screen.dart';
 
+/// Seçilen bir kategoriye ait araçların filtrelenebildiği, aranabildiği ve sıralanabildiği liste ekranı.
 class VehicleListScreen extends StatelessWidget {
+  /// Görüntülenen kategori nesnesi
   final Category category;
 
+  /// VehicleListScreen kurucu metodu (Constructor)
   const VehicleListScreen({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {
+    // Koyu tema durumu sorgusu
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final vehicleProvider = Provider.of<VehicleProvider>(context);
+    
+    // Aktif kategoriye ve filtrelere (arama, sıralama, yakıt, şanzıman) göre araçları çekiyoruz.
     final cars = vehicleProvider.getFilteredCars(category.id);
 
     return Scaffold(
       appBar: AppBar(
+        // Başlıkta kategori adı (örn: "Basic Araçları")
         title: Text(
           '${category.name} Araçları',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+        // Geri butonu
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        // Sağ üstte filtreleme ve sıralama modalını açan buton
         actions: [
           IconButton(
             icon: const Icon(Icons.tune_rounded),
@@ -37,12 +53,16 @@ class VehicleListScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Arama Çubuğu
+          // ==========================================
+          // ARAMA ÇUBUĞU (SearchBar)
+          // ==========================================
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SearchBar(
               hintText: '${category.name} içinde marka/model ara...',
+              // Arama büyüteç ikonu
               leading: const Icon(Icons.search_rounded, color: AppColors.primaryBlue),
+              // Arama kutusunda yazı varsa temizleme (çarpı) butonu gösteriyoruz.
               trailing: [
                 if (vehicleProvider.searchQuery.isNotEmpty)
                   IconButton(
@@ -57,16 +77,20 @@ class VehicleListScreen extends StatelessWidget {
               side: WidgetStatePropertyAll(
                 BorderSide(color: isDark ? AppColors.borderDark : AppColors.borderLight),
               ),
+              // Kullanıcı her harf yazdığında filtrelemeyi anlık tetikliyoruz.
               onChanged: (val) => vehicleProvider.setSearchQuery(val),
             ),
           ),
 
-          // Aktif Filtre Bilgisi ve Sayı
+          // ==========================================
+          // LİSTELENEN ARAÇ SAYISI VE AKTİF SIRALAMA BİLGİSİ
+          // ==========================================
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Filtreleme sonucu bulunan araç adedi
                 Text(
                   '${cars.length} araç listeleniyor',
                   style: TextStyle(
@@ -75,6 +99,7 @@ class VehicleListScreen extends StatelessWidget {
                     color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                   ),
                 ),
+                // Hızlı sıralama bilgisi ve tıklanınca filtre modalını açma
                 InkWell(
                   onTap: () => _showFilterBottomSheet(context),
                   child: Row(
@@ -100,10 +125,13 @@ class VehicleListScreen extends StatelessWidget {
             ),
           ),
 
-          // Araç Listesi
+          // ==========================================
+          // ARAÇ LİSTESİ VEYA BOŞ DURUM GÖRÜNÜMÜ
+          // ==========================================
           Expanded(
             child: cars.isEmpty
                 ? Center(
+                    // Kriterlere uyan araç bulunamadığında gösterilecek boş durum tasarımı
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -122,6 +150,7 @@ class VehicleListScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
+                        // Filtreleri sıfırlayarak tüm araçları yeniden getiren buton
                         TextButton(
                           onPressed: () => vehicleProvider.resetFilters(),
                           child: const Text('Filtreleri Sıfırla'),
@@ -134,9 +163,11 @@ class VehicleListScreen extends StatelessWidget {
                     itemCount: cars.length,
                     itemBuilder: (context, index) {
                       final car = cars[index];
+                      // Her bir araç için özel araç kartı üretiyoruz.
                       return VehicleCard(
                         car: car,
                         onTap: () {
+                          // Araca tıklandığında detay sayfasına geçiş yapıyoruz.
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => VehicleDetailScreen(car: car),
@@ -152,6 +183,10 @@ class VehicleListScreen extends StatelessWidget {
     );
   }
 
+  // ==========================================
+  // SIRALAMA ETİKETİ METNİ YARDIMCISI
+  // ==========================================
+  /// Enum olarak gelen sıralama seçeneğini kullanıcı dostu Türkçe metne dönüştürür.
   String _getSortLabel(SortOption option) {
     switch (option) {
       case SortOption.priceAsc:
@@ -169,7 +204,10 @@ class VehicleListScreen extends StatelessWidget {
     }
   }
 
-  // Filtreleme ve Sıralama BottomSheet
+  // ==========================================
+  // FİLTRELEME VE SIRALAMA ALTTAN AÇILIR MENÜSÜ
+  // ==========================================
+  /// Fiyat, yıl, km sıralamalarını ve vites/yakıt filtrelerini seçtiren BottomSheet modalı.
   void _showFilterBottomSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final vp = Provider.of<VehicleProvider>(context, listen: false);
@@ -179,6 +217,7 @@ class VehicleListScreen extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        // Modal içi seçimlerin anlık değişebilmesi için StatefulBuilder kullanıyoruz.
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
@@ -192,6 +231,7 @@ class VehicleListScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Modal tutamağı
                     Center(
                       child: Container(
                         width: 40,
@@ -203,6 +243,7 @@ class VehicleListScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    // Başlık ve Sıfırla Butonu
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -216,6 +257,7 @@ class VehicleListScreen extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
+                            // Filtreleri sıfırlayıp modalı güncelliyoruz.
                             vp.resetFilters();
                             setModalState(() {});
                           },
@@ -225,7 +267,9 @@ class VehicleListScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // Sıralama Seçenekleri
+                    // ==========================================
+                    // SIRALAMA SEÇENEKLERİ (Chips)
+                    // ==========================================
                     Text(
                       'Sıralama Ölçütü',
                       style: TextStyle(
@@ -249,7 +293,9 @@ class VehicleListScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // Vites Tipi
+                    // ==========================================
+                    // VİTES TİPİ FİLTRESİ
+                    // ==========================================
                     Text(
                       'Vites Tipi',
                       style: TextStyle(
@@ -279,7 +325,9 @@ class VehicleListScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // Yakıt Tipi
+                    // ==========================================
+                    // YAKIT TİPİ FİLTRESİ
+                    // ==========================================
                     Text(
                       'Yakıt Tipi',
                       style: TextStyle(
@@ -309,7 +357,9 @@ class VehicleListScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    // Uygula Butonu
+                    // ==========================================
+                    // FİLTRELERİ UYGULA VE KAPAT BUTONU
+                    // ==========================================
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: ElevatedButton.styleFrom(
@@ -330,6 +380,10 @@ class VehicleListScreen extends StatelessWidget {
     );
   }
 
+  // ==========================================
+  // SIRALAMA ETİKETİ (ChoiceChip) ÜRETİCİSİ
+  // ==========================================
+  /// Sıralama seçenekleri için seçilebilir etiket (chip) widget'ı oluşturur.
   Widget _buildSortChip(
     VehicleProvider vp,
     SortOption option,
@@ -342,7 +396,9 @@ class VehicleListScreen extends StatelessWidget {
       selected: isSelected,
       onSelected: (selected) {
         if (selected) {
+          // Sıralama seçeneğini atıyoruz.
           vp.setSortOption(option);
+          // Modalı yeniden çiziyoruz.
           setModalState(() {});
         }
       },

@@ -1,53 +1,75 @@
+// Asenkron gecikmeler ve zamanlayıcı (Timer) işlemleri için Dart asenkron kütüphanesini içe aktarıyoruz.
 import 'dart:async';
+// Flutter materyal arayüz kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Uygulama tema renklerini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Marka tipografik logosunu içe aktarıyoruz.
 import '../../widgets/sem_logo.dart';
+// Yönlendirilecek olan giriş ekranını içe aktarıyoruz.
 import '../auth/login_screen.dart';
 
+/// Uygulama ilk açıldığında gösterilen animasyonlu karşılama (Splash) ekranı.
 class SplashScreen extends StatefulWidget {
+  /// SplashScreen kurucu metodu (Constructor)
   const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+/// SplashScreen durum sınıfı: Animasyon kontrolcüsü için SingleTickerProviderStateMixin kullanır.
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  /// Logo ve içerik animasyonunun süresini ve durumunu yöneten denetleyici
   late AnimationController _controller;
+  
+  /// Opaklık geçişi (Fade-in) animasyonu
   late Animation<double> _fadeAnimation;
+  
+  /// Boyut büyütme/esneme (Scale-in) animasyonu
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
 
+    // 1.2 saniye sürecek animasyon denetleyicisini tanımlıyoruz.
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
 
+    // Opaklık animasyonu: 0'dan 1'e yumuşak geçiş (easeIn eğrisi)
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeIn,
     );
 
+    // Boyut animasyonu: 0.85 ölçeğinden 1.0 tam boyutuna hafif yaylanma efektiyle (easeOutBack)
     _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
     );
 
+    // Animasyonu ileri doğru başlatıyoruz.
     _controller.forward();
+    
+    // Belirlenen süre sonunda giriş ekranına yönlendirme fonksiyonunu çağırıyoruz.
     _navigateToNext();
   }
 
+  /// 2.5 saniye sonra LoginScreen ekranına yumuşak geçiş (FadeTransition) ile geçiş yapan fonksiyon
   void _navigateToNext() {
-    // 2.5 saniyelik gecikme simülasyonu ardından Login ekranına yönlendirme
     Timer(const Duration(milliseconds: 2500), () {
+      // Widget ağaçtan çıkarılmışsa işlem yapmıyoruz (bellek sızıntısı önlemi).
       if (!mounted) return;
+      // Geri dönüşü engelleyecek şekilde mevcut ekranı silip yerine LoginScreen'i koyuyoruz.
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               const LoginScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Sayfalar arası geçişi saydamlık animasyonu ile yapıyoruz.
             return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: const Duration(milliseconds: 600),
@@ -58,19 +80,24 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    // Animasyon denetleyicisini bellekten temizliyoruz.
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Koyu tema modunda mıyız sorguluyoruz.
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(
         child: Stack(
           children: [
-            // Arka plan hafif gradyan detayı
+            // ==========================================
+            // ARKA PLAN DEKORATİF GRADYAN DAİRELERİ
+            // ==========================================
+            // Sağ üst köşedeki hafif mavi ışıma efekti
             Positioned(
               top: -100,
               right: -100,
@@ -83,6 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
+            // Sol alt köşedeki hafif mavi ışıma efekti
             Positioned(
               bottom: -60,
               left: -60,
@@ -96,7 +124,9 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
 
-            // Ortalanmış İçerik
+            // ==========================================
+            // MERKEZİ LOGO VE İKON ALANI (Animasyonlu)
+            // ==========================================
             Center(
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -105,7 +135,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Araba rozeti / simgesi
+                      // Araba simgesini içeren gölgeli dairesel kart
                       Container(
                         padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
@@ -135,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                       const SizedBox(height: 28),
 
-                      // RichText ile hazırlanan SEM Auto Tipografik Logo
+                      // SEM Auto Tipografik Logo ve alt slogan
                       const SemLogo(
                         fontSize: 40,
                         showSubtitle: true,
@@ -146,7 +176,9 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
 
-            // Alt Kısım: CircularProgressIndicator ve yükleme metni
+            // ==========================================
+            // ALT YÜKLENME GÖSTERGESİ VE METİN
+            // ==========================================
             Positioned(
               left: 0,
               right: 0,
@@ -154,6 +186,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Dönen mavi çember yükleniyor animasyonu
                   const SizedBox(
                     width: 28,
                     height: 28,
@@ -165,6 +198,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Yükleniyor durum metni
                   Text(
                     'Araçlar hazırlanıyor...',
                     style: TextStyle(

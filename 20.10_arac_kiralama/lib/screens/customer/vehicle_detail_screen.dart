@@ -1,17 +1,30 @@
+// Flutter materyal arayüz kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Tarih ve saat formatlama işlemleri için intl kütüphanesini içe aktarıyoruz.
 import 'package:intl/intl.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Uygulama tema renklerini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Araç veri modelini içe aktarıyoruz.
 import '../../models/car.dart';
+// Rezervasyon veri modelini içe aktarıyoruz.
 import '../../models/reservation.dart';
+// Kullanıcı oturum bilgilerine erişmek için AuthProvider'ı içe aktarıyoruz.
 import '../../providers/auth_provider.dart';
+// Özel buton bileşenini içe aktarıyoruz.
 import '../../widgets/custom_button.dart';
+// Güncel yakıt fiyatları açılır penceresini içe aktarıyoruz.
 import '../../widgets/fuel_dialog.dart';
+// Ödeme ve rezervasyon tamamlama ekranını içe aktarıyoruz.
 import 'checkout_screen.dart';
 
+/// Aracın tüm teknik ayrıntılarını, yakıt seviyesini, kiralama tarih aralığını ve 250 km kuralını gösteren detay ekranı.
 class VehicleDetailScreen extends StatefulWidget {
+  /// İncelenen araç nesnesi
   final Car car;
 
+  /// VehicleDetailScreen kurucu metodu (Constructor)
   const VehicleDetailScreen({super.key, required this.car});
 
   @override
@@ -19,12 +32,13 @@ class VehicleDetailScreen extends StatefulWidget {
 }
 
 class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
+  /// Kullanıcının seçtiği kiralama başlangıç ve bitiş tarih aralığı
   DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
     super.initState();
-    // Varsayılan olarak bugünden başlayarak 2 günlük aralık
+    // Ekran ilk açıldığında varsayılan olarak bugünden itibaren 2 günlük bir aralık seçiyoruz.
     final now = DateTime.now();
     _selectedDateRange = DateTimeRange(
       start: now,
@@ -32,28 +46,35 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
+  /// Seçili tarih aralığından toplam kiralanan gün sayısını hesaplayan getter
   int get _rentalDays {
     if (_selectedDateRange == null) return 1;
     final diff = _selectedDateRange!.end.difference(_selectedDateRange!.start).inDays;
+    // Eğer aynı gün seçildiyse en az 1 gün kabul ediyoruz.
     return diff <= 0 ? 1 : diff;
   }
 
+  /// Aracın günlük fiyatı ile gün sayısını çarparak taban toplam tutarı hesaplayan getter
   double get _baseTotalAmount {
     return widget.car.dailyPrice * _rentalDays;
   }
 
-  // Tarih Aralığı Seçici (Takvim)
+  // ==========================================
+  // TARİH ARALIĞI SEÇİCİ (DateRangePicker)
+  // ==========================================
+  /// Kullanıcıya takvim üzerinden kiralama başlangıç ve bitiş tarihlerini seçtiren diyalog
   Future<void> _selectDateRange() async {
     final now = DateTime.now();
     final picked = await showDateRangePicker(
       context: context,
       firstDate: now,
-      lastDate: now.add(const Duration(days: 180)),
+      lastDate: now.add(const Duration(days: 180)), // 6 aya kadar ileri rezervasyon
       initialDateRange: _selectedDateRange,
       helpText: 'KİRALAMA TARİH ARALIĞINI SEÇİN',
       cancelText: 'İPTAL',
       confirmText: 'UYGULA',
       builder: (context, child) {
+        // Takvim temasını uygulama rengine uyarlıyoruz.
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
@@ -65,6 +86,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       },
     );
 
+    // Yeni bir tarih seçildiyse durumu güncelliyoruz.
     if (picked != null) {
       setState(() {
         _selectedDateRange = picked;
@@ -72,7 +94,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     }
   }
 
-  // Rezervasyon ve Şehir Dışı Kilometre Hesaplama Diyaloğu
+  // ==========================================
+  // ŞEHİR DIŞI VE ROTA HESAPLAMA MODALI
+  // ==========================================
+  /// 250 KM kuralını ve şehir dışı seyahat mesafesini hesaplatan alttan açılır pencereyi başlatır.
   void _openReservationDialog() {
     showModalBottomSheet(
       context: context,
@@ -89,18 +114,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Koyu tema modunda mıyız sorguluyoruz.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final car = widget.car;
 
+    // Tarihleri gün.ay.yıl biçiminde göstermek için formatlayıcı
     final dateFormat = DateFormat('dd.MM.yyyy');
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // AppBar & Büyük Araç Görseli
+          // ==========================================
+          // ESNEK ÜST ÇUBUK VE BÜYÜK ARAÇ GÖRSELİ
+          // ==========================================
           SliverAppBar(
-            expandedHeight: 280,
-            pinned: true,
+            expandedHeight: 280, // Üst görselin açılmış yüksekliği
+            pinned: true, // Kaydırılsa bile AppBar tepede sabit kalır
             leading: Padding(
               padding: const EdgeInsets.all(8.0),
               child: CircleAvatar(
@@ -116,6 +145,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
+                  // Araç fotoğrafı
                   Image.network(
                     car.imageUrl,
                     fit: BoxFit.cover,
@@ -124,6 +154,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       child: const Center(child: Icon(Icons.directions_car, size: 80)),
                     ),
                   ),
+                  // Üst ve alt gölgeli karartma gradyanı (metinlerin okunması için)
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -137,6 +168,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       ),
                     ),
                   ),
+                  // Plaka ve Müsaitlik rozeti
                   Positioned(
                     bottom: 16,
                     left: 20,
@@ -144,15 +176,25 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${car.dailyPrice.toStringAsFixed(0)} ₺ / gün',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            shadows: [Shadow(blurRadius: 10, color: Colors.black54)],
+                        // Resmi Plaka Numarası
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: Text(
+                            car.plateNumber,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              letterSpacing: 1.2,
+                            ),
                           ),
                         ),
+                        // Müsait / Kirada Durumu
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
@@ -160,11 +202,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            car.isAvailable ? 'MÜSAİT' : 'KİRADA',
+                            car.isAvailable ? 'Müsait' : 'Kirada',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
                               fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -176,16 +218,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             ),
           ),
 
-          // İçerik Listesi
+          // ==========================================
+          // DETAY BİLGİLERİ VE FORMLAR LİSTESİ
+          // ==========================================
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Marka Model & Plaka
+                  // Araç Adı ve Günlük Fiyat
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
@@ -197,47 +242,47 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           ),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDarkElevated : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade400),
-                        ),
-                        child: Text(
-                          car.plateNumber,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            fontSize: 12,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${car.dailyPrice.toStringAsFixed(0)} ₺',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryBlue,
+                            ),
                           ),
-                        ),
+                          Text(
+                            '/ gün',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // Temel Özellikler Izgarası (Yıl, KM, Şanzıman, Koltuk)
+                  // ==========================================
+                  // TEKNİK ÖZELLİKLER ŞERİDİ
+                  // ==========================================
                   Row(
                     children: [
-                      _buildSpecItem(Icons.calendar_today_rounded, 'Model Yılı', '${car.year}', isDark),
-                      _buildSpecItem(Icons.speed_rounded, 'Kilometre', '${car.kilometer} km', isDark),
                       _buildSpecItem(Icons.settings_suggest_rounded, 'Vites', car.transmission, isDark),
-                      _buildSpecItem(Icons.airline_seat_recline_normal_rounded, 'Kapasite', '${car.seatCount} Kişi', isDark),
+                      _buildSpecItem(Icons.local_gas_station_rounded, 'Yakıt', car.fuelType, isDark),
+                      _buildSpecItem(Icons.event_seat_rounded, 'Kapasite', '${car.seatCount} Kişi', isDark),
+                      _buildSpecItem(Icons.speed_rounded, 'Kilometre', '${car.kilometer} km', isDark),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  // KRİTİK ÖDEV KRİTERİ: Yakıt Göstergesi & Pop-up Tıklaması
-                  Text(
-                    'Yakıt Durumu ve Tahmini Menzil',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.textLight : AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  // ==========================================
+                  // YAKIT SEVİYESİ VE TAHMİNİ MENZİL KARTI
+                  // Tıklandığında güncel akaryakıt pompa fiyatlarını açar!
+                  // ==========================================
                   InkWell(
                     onTap: () => FuelPriceDialog.show(context),
                     borderRadius: BorderRadius.circular(16),
@@ -247,8 +292,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                         color: isDark ? AppColors.surfaceDarkElevated : AppColors.backgroundLight,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
-                          width: 1.5,
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
                         ),
                       ),
                       child: Column(
@@ -259,10 +303,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.local_gas_station_rounded, color: AppColors.primaryBlue),
+                                  const Icon(Icons.battery_charging_full_rounded, color: AppColors.primaryBlue),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '${car.fuelType} (Depo %${(car.fuelLevelPercentage * 100).toInt()})',
+                                    'Yakıt Durumu (%${(car.fuelLevelPercentage * 100).toInt()})',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -271,28 +315,29 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                                   ),
                                 ],
                               ),
-                              Row(
+                              // Pompa Fiyatlarını Gör bağlantısı
+                              const Row(
                                 children: [
                                   Text(
-                                    'Fiyatları Gör',
+                                    'Pompa Fiyatları',
                                     style: TextStyle(
-                                      color: AppColors.primaryBlue,
                                       fontSize: 12,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaryBlue,
                                     ),
                                   ),
-                                  const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.primaryBlue),
+                                  Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.primaryBlue),
                                 ],
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Görsel Yakıt İlerleme Çubuğu (Gauge / Progress Bar)
+                          // Yakıt Doluluk İlerleme Çubuğu (LinearProgressIndicator)
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                             child: LinearProgressIndicator(
                               value: car.fuelLevelPercentage,
-                              minHeight: 12,
+                              minHeight: 8,
                               backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 car.fuelLevelPercentage > 0.5
@@ -305,6 +350,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              // Kalan yakıtla gidilebilecek tahmini menzil
                               Text(
                                 'Tahmini Menzil: ~${car.estimatedRangeKm} km',
                                 style: const TextStyle(
@@ -328,7 +374,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Müsaitlik Takvimi (DateRangePicker)
+                  // ==========================================
+                  // MÜSAİTLİK TAKVİMİ / TARİH SEÇİCİ KARTI
+                  // ==========================================
                   Text(
                     'Kiralama Tarihleri',
                     style: TextStyle(
@@ -394,7 +442,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // 250 KM Kuralı Bilgilendirme Kutusu
+                  // ==========================================
+                  // 250 KM KURALI BİLGİLENDİRME KUTUSU
+                  // ==========================================
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -434,7 +484,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 100), // Alt çubuk payı
+                  const SizedBox(height: 100), // Alt çubuğun içeriği örtmemesi için boşluk payı
                 ],
               ),
             ),
@@ -442,7 +492,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         ],
       ),
 
-      // Alt Sabit Rezervasyon Çubuğu
+      // ==========================================
+      // ALT SABİT REZERVASYON ÇUBUĞU (BottomSheet)
+      // ==========================================
       bottomSheet: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -458,6 +510,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         child: SafeArea(
           child: Row(
             children: [
+              // Toplam Gün ve Tutar Özeti
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -482,6 +535,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 ),
               ),
               const SizedBox(width: 16),
+              // Rezervasyon Yap Aksiyon Butonu
               Expanded(
                 flex: 2,
                 child: CustomElevatedButton(
@@ -497,6 +551,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
+  /// Teknik özellik simge ve metnini oluşturan yardımcı kutu widget'ı
   Widget _buildSpecItem(IconData icon, String title, String value, bool isDark) {
     return Expanded(
       child: Container(
@@ -539,7 +594,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 }
 
-// Şehir Dışı Mesafe & Kilometre Hesaplama Modalı
+// ==========================================
+// ŞEHİR DIŞI MESAFE VE KİLOMETRE HESAPLAMA MODALI
+// ==========================================
+/// Şehirlerarası seyahat durumunda mesafe seçimi ve 250 km limitine göre ek ücret hesaplayan modal sınıfı.
 class _IntercityCalculationModal extends StatefulWidget {
   final Car car;
   final int rentalDays;
@@ -558,10 +616,16 @@ class _IntercityCalculationModal extends StatefulWidget {
 }
 
 class _IntercityCalculationModalState extends State<_IntercityCalculationModal> {
+  /// Şehirlerarası seyahat yapılacak mı bayrağı
   bool _isIntercity = false;
+  
+  /// Seçilen rota şehri
   String _selectedCity = 'Bursa (150 km)';
+  
+  /// Gidilecek mesafe (km)
   int _distanceKm = 150;
 
+  /// Şehirler ve İstanbul çıkışlı gidiş-dönüş / tek yön rota mesafeleri haritası
   final Map<String, int> _cityDistances = {
     'Bursa (150 km)': 150,
     'Kocaeli / Yalova (110 km)': 110,
@@ -571,24 +635,29 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
     'Trabzon (1.050 km)': 1050,
   };
 
-  // 250 KM Kuralına Göre Ekstra Ücret Hesabı
+  // ==========================================
+  // 250 KM KURALINA GÖRE EK GÜN HESABI
+  // ==========================================
+  /// Toplam tanınan kilometre = Gün Sayısı * 250 km.
+  /// Eğer seyahat mesafesi bu hakkı aşıyorsa, aşan her 250 km için 1 ek gün ücreti yansıtılır.
   int get _extraDaysCharged {
     if (!_isIntercity) return 0;
-    // Toplam tanınan km hakkı = Kiralama günü * 250 km
     final allowedKm = widget.rentalDays * 250;
     if (_distanceKm <= allowedKm) {
-      return 0; // Mesafe sınır dahilinde, ek ücret yok!
+      return 0; // Sınır dahilinde, ek ücret yok
     } else {
       final excessKm = _distanceKm - allowedKm;
-      // Aşılan her 250 km için 1 gün ekstra ücret
+      // Yukarı yuvarlayarak aşılan her 250 km dilimine 1 tam gün hesaplıyoruz.
       return (excessKm / 250).ceil();
     }
   }
 
+  /// Ekstra mesafe için yansıtılan toplam ek bedel
   double get _extraAmount {
     return _extraDaysCharged * widget.car.dailyPrice;
   }
 
+  /// Taban kiralama bedeli ile ekstra mesafe bedelinin toplamı
   double get _finalTotalAmount {
     return widget.baseTotal + _extraAmount;
   }
@@ -609,6 +678,7 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Modal tutamağı
             Center(
               child: Container(
                 width: 40,
@@ -638,7 +708,9 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
             ),
             const SizedBox(height: 20),
 
-            // Şehir Dışına Çıkış Switch'i
+            // ==========================================
+            // ŞEHİR DIŞI SEYAHAT SEÇİM ANAHTARI (Switch)
+            // ==========================================
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -674,7 +746,9 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
               ),
             ),
 
-            // Şehir Seçimi Dropdown (Eğer Şehir Dışı Seçilmişse)
+            // ==========================================
+            // ŞEHİR SEÇİMİ AÇILIR MENÜSÜ (Dropdown)
+            // ==========================================
             if (_isIntercity) ...[
               const SizedBox(height: 16),
               Text(
@@ -706,7 +780,9 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
               ),
               const SizedBox(height: 12),
 
-              // Mesafe Hesaplama Uyarı Kutusu
+              // ==========================================
+              // KİLOMETRE VE EK ÜCRET BİLGİLENDİRME KUTUSU
+              // ==========================================
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -743,7 +819,7 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
             const SizedBox(height: 20),
             const Divider(),
 
-            // Tutar Özeti
+            // Toplam Tutar Özeti
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -760,13 +836,16 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
             ),
             const SizedBox(height: 20),
 
-            // Ödeme Ekranına Geç Butonu
+            // ==========================================
+            // ÖDEMEYE İLERLE BUTONU
+            // ==========================================
             CustomElevatedButton(
               text: 'Ödemeye İlerle',
               icon: Icons.payment_rounded,
               onPressed: () {
-                Navigator.of(context).pop(); // Modalı kapat
+                Navigator.of(context).pop(); // Rota modalını kapatıyoruz.
 
+                // Girilen rota, gün ve ücret bilgilerine göre rezervasyon nesnesi oluşturuyoruz.
                 final reservation = Reservation(
                   id: 'res_${DateTime.now().millisecondsSinceEpoch}',
                   carId: widget.car.id,
@@ -786,6 +865,7 @@ class _IntercityCalculationModalState extends State<_IntercityCalculationModal> 
                   createdAt: DateTime.now(),
                 );
 
+                // Kullanıcıyı güvenli ödeme (kart bilgisi girme) ekranına yönlendiriyoruz.
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => CheckoutScreen(reservation: reservation),

@@ -1,41 +1,56 @@
+// Araç veri modelini içe aktarıyoruz.
 import '../models/car.dart';
+// Kategori veri modelini içe aktarıyoruz.
 import '../models/category.dart';
+// Akaryakıt fiyat veri modelini içe aktarıyoruz.
 import '../models/fuel_price.dart';
+// Kullanıcı veri modelini içe aktarıyoruz.
 import '../models/user.dart';
 
+/// Uygulama için statik ve sahte (mock) verileri sağlayan yardımcı veri sınıfı.
+/// API veya veritabanı bağlanana kadar arayüzün dinamik çalışması için kullanılır.
 class MockData {
-  // Kategoriler
+  // ==========================================
+  // ARAÇ KATEGORİLERİ (Categories)
+  // ==========================================
+  /// Sistemde sunulan araç segmentleri ve açıklamaları
   static final List<Category> categories = [
+    // 1. Temel ekonomik sınıf (Şehir içi günlük pratik kullanım)
     const Category(
       id: 'basic',
       name: 'Basic',
       description: 'Ekonomik ve pratik şehir içi sürüşü',
       iconName: 'directions_car',
     ),
+    // 2. Geniş bagajlı ve konforlu aile seçenekleri
     const Category(
       id: 'basic_plus',
       name: 'Basic+',
       description: 'Geniş bagajlı konforlu aile seçenekleri',
       iconName: 'commute',
     ),
+    // 3. Dinamik Crossover ve SUV sınıfı
     const Category(
       id: 'flex',
       name: 'flex',
       description: 'Esnek, dinamik ve maceracı Crossover/SUV',
       iconName: 'electric_car',
     ),
+    // 4. Gelişmiş donanımlı üst segment araçlar
     const Category(
       id: 'flex_plus',
       name: 'flex+',
       description: 'Gelişmiş donanımlı üst segment araçlar',
       iconName: 'airport_shuttle',
     ),
+    // 5. Prestij ve üst düzey konfor deneyimi sunan lüks sınıf
     const Category(
       id: 'lux',
       name: 'Lux',
       description: 'Prestij ve üst düzey konfor deneyimi',
       iconName: 'stars',
     ),
+    // 6. Ayrıcalıklı ve yüksek performanslı süper lüks sınıf
     const Category(
       id: 'ultra_lux',
       name: 'Ultra Lux',
@@ -44,8 +59,12 @@ class MockData {
     ),
   ];
 
-  // Araçlar
+  // ==========================================
+  // SAHTE ARAÇ LİSTESİ (Cars)
+  // ==========================================
+  /// Sistemde kiralanabilir ve yönetilebilir sahte araç filosu
   static final List<Car> cars = [
+    // Araç 1: Renault Clio (Basic kategorisi)
     Car(
       id: 'c1',
       brand: 'Renault',
@@ -65,6 +84,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 45)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 280)),
     ),
+    // Araç 2: Fiat Egea (Basic kategorisi, muayenesi yaklaşan araç örneği)
     Car(
       id: 'c2',
       brand: 'Fiat',
@@ -82,8 +102,9 @@ class MockData {
       imageUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
       isAvailable: true,
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 80)),
-      nextInspectionDate: DateTime.now().add(const Duration(days: 15)), // Yaklaşan muayene!
+      nextInspectionDate: DateTime.now().add(const Duration(days: 15)), // Yaklaşan muayene uyarısı için
     ),
+    // Araç 3: Toyota Corolla Hibrit (Basic+ kategorisi)
     Car(
       id: 'c3',
       brand: 'Toyota',
@@ -103,6 +124,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 20)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 320)),
     ),
+    // Araç 4: Ford Focus Dizel (Basic+ kategorisi)
     Car(
       id: 'c4',
       brand: 'Ford',
@@ -122,6 +144,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 110)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 90)),
     ),
+    // Araç 5: Peugeot 3008 SUV (Flex kategorisi)
     Car(
       id: 'c5',
       brand: 'Peugeot',
@@ -141,6 +164,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 30)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 240)),
     ),
+    // Araç 6: Hyundai Tucson (Flex kategorisi)
     Car(
       id: 'c6',
       brand: 'Hyundai',
@@ -160,6 +184,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 15)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 410)),
     ),
+    // Araç 7: Volkswagen Passat (Flex+ kategorisi, muayene uyarısı)
     Car(
       id: 'c7',
       brand: 'Volkswagen',
@@ -179,6 +204,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 90)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 8)), // Çok acil muayene!
     ),
+    // Araç 8: Audi A4 Sedan (Flex+ kategorisi)
     Car(
       id: 'c8',
       brand: 'Audi',
@@ -198,6 +224,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 60)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 180)),
     ),
+    // Araç 9: BMW 520i (Lux kategorisi)
     Car(
       id: 'c9',
       brand: 'BMW',
@@ -217,6 +244,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 25)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 350)),
     ),
+    // Araç 10: Mercedes-Benz E 200 (Lux kategorisi)
     Car(
       id: 'c10',
       brand: 'Mercedes-Benz',
@@ -236,6 +264,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 10)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 390)),
     ),
+    // Araç 11: Porsche Panamera (Ultra Lux kategorisi)
     Car(
       id: 'c11',
       brand: 'Porsche',
@@ -255,6 +284,7 @@ class MockData {
       lastMaintenanceDate: DateTime.now().subtract(const Duration(days: 40)),
       nextInspectionDate: DateTime.now().add(const Duration(days: 300)),
     ),
+    // Araç 12: Range Rover Autobiography (Ultra Lux kategorisi)
     Car(
       id: 'c12',
       brand: 'Range Rover',
@@ -276,8 +306,12 @@ class MockData {
     ),
   ];
 
-  // 3 Farklı Petrol Şirketinin Güncel Mock Yakıt Fiyatları
+  // ==========================================
+  // AKARYAKIT FİYATLARI (Fuel Prices)
+  // ==========================================
+  /// 3 Farklı Petrol Şirketinin Güncel Mock Yakıt Fiyatları
   static final List<FuelPrice> fuelPrices = [
+    // 1. Opet Fiyatları
     FuelPrice(
       companyName: 'Opet',
       gasolinePrice: 44.82,
@@ -286,6 +320,7 @@ class MockData {
       brandColorHex: '#0047BA',
       lastUpdated: DateTime.now(),
     ),
+    // 2. Petrol Ofisi Fiyatları
     FuelPrice(
       companyName: 'Petrol Ofisi',
       gasolinePrice: 44.78,
@@ -294,6 +329,7 @@ class MockData {
       brandColorHex: '#E30613',
       lastUpdated: DateTime.now(),
     ),
+    // 3. Shell Fiyatları
     FuelPrice(
       companyName: 'Shell',
       gasolinePrice: 44.95,
@@ -304,8 +340,12 @@ class MockData {
     ),
   ];
 
-  // Kullanıcılar (Müşteri & Admin)
+  // ==========================================
+  // KULLANICILAR (Users)
+  // ==========================================
+  /// Sistemde tanımlı varsayılan yönetici ve müşteri profilleri
   static final List<User> users = [
+    // Yönetici Hesabı: 'admin@semauto.com' ile giriş yapılabilir.
     const User(
       id: 'u_admin',
       fullName: 'SEM Auto Yönetici',
@@ -315,6 +355,7 @@ class MockData {
       role: UserRole.admin,
       isNfcVerified: true,
     ),
+    // Normal Müşteri Hesabı: 'ahmet@gmail.com' ile giriş yapılabilir.
     const User(
       id: 'u_customer',
       fullName: 'Ahmet Yılmaz',
@@ -326,7 +367,10 @@ class MockData {
     ),
   ];
 
-  // Kullanıcı Sözleşmesi Metni
+  // ==========================================
+  // KULLANICI SÖZLEŞMESİ METNİ (User Agreement)
+  // ==========================================
+  /// Müşterinin rezervasyon onayı sırasında okuyup kabul ettiği yasal şartlar
   static const String userAgreementText = '''
 SEM AUTO ARAÇ KİRALAMA VE KULLANICI SÖZLEŞMESİ
 

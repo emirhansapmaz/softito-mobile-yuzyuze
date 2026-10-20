@@ -1,29 +1,69 @@
+/// Rezervasyonun işlem durumlarını belirten enum (numaralandırma).
 enum ReservationStatus {
+  /// Onay bekleyen rezervasyon
   pending,
+  /// Yönetici tarafından onaylanmış rezervasyon
   confirmed,
+  /// Reddedilmiş veya iptal edilmiş rezervasyon
   rejected,
+  /// Tamamlanmış (teslim edilmiş) rezervasyon
   completed,
 }
 
+/// Müşterinin oluşturduğu araç kiralama rezervasyonunu temsil eden model sınıfı.
 class Reservation {
+  /// Rezervasyonun benzersiz kimliği (ID)
   final String id;
+  
+  /// Kiralanan aracın benzersiz kimliği
   final String carId;
+  
+  /// Kiralanan aracın marka ve model adı
   final String carName;
+  
+  /// Kiralanan aracın görsel adresi
   final String carImageUrl;
+  
+  /// Rezervasyonu yapan kullanıcının kimliği
   final String userId;
+  
+  /// Rezervasyonu yapan müşterinin adı soyadı
   final String userName;
+  
+  /// Kiralamanın başlangıç tarihi
   final DateTime startDate;
+  
+  /// Kiralamanın bitiş (teslim) tarihi
   final DateTime endDate;
+  
+  /// Toplam kiralanan gün sayısı
   final int totalDays;
+  
+  /// Şehirlerarası seyahat edilip edilmeyeceği bilgisi
   final bool isIntercity;
+  
+  /// Şehirlerarası seyahat edilecekse gidilecek hedef şehir
   final String? destinationCity;
+  
+  /// Yapılması planlanan tahmini mesafe (kilometre cinsinden)
   final int estimatedDistanceKm;
+  
+  /// Aracın günlük kiralama ücreti
   final double dailyPrice;
+  
+  /// Günlük limit aşıldığında veya şehirlerarası durumda yansıyan ek kilometre bedeli
   final double extraDistanceCharge;
+  
+  /// Tüm ek ücretler ve gün sayısı dahil toplam ödenecek tutar
   final double totalAmount;
+  
+  /// Rezervasyonun güncel durumu (onaylandı, bekliyor, reddedildi vb.)
   final ReservationStatus status;
+  
+  /// Rezervasyonun sistemde oluşturulduğu tarih ve saat
   final DateTime createdAt;
 
+  /// Reservation kurucu metodu (Constructor)
   const Reservation({
     required this.id,
     required this.carId,
@@ -44,6 +84,7 @@ class Reservation {
     required this.createdAt,
   });
 
+  /// Mevcut rezervasyonun seçilen alanlarını güncelleyip yeni bir kopya oluşturan metot
   Reservation copyWith({
     String? id,
     String? carId,
@@ -84,6 +125,7 @@ class Reservation {
     );
   }
 
+  /// JSON haritasından Reservation nesnesi oluşturan fabrika kurucu
   factory Reservation.fromJson(Map<String, dynamic> json) {
     return Reservation(
       id: json['id'] as String,
@@ -101,6 +143,7 @@ class Reservation {
       dailyPrice: (json['dailyPrice'] as num).toDouble(),
       extraDistanceCharge: (json['extraDistanceCharge'] as num).toDouble(),
       totalAmount: (json['totalAmount'] as num).toDouble(),
+      // Metin olarak gelen durum adını ReservationStatus enum sabitine eşleştiriyoruz.
       status: ReservationStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => ReservationStatus.pending,
@@ -109,6 +152,7 @@ class Reservation {
     );
   }
 
+  /// Reservation nesnesini JSON formatına dönüştüren metot
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -126,6 +170,7 @@ class Reservation {
       'dailyPrice': dailyPrice,
       'extraDistanceCharge': extraDistanceCharge,
       'totalAmount': totalAmount,
+      // Enum değerini metin adına çeviriyoruz (örn: 'pending')
       'status': status.name,
       'createdAt': createdAt.toIso8601String(),
     };

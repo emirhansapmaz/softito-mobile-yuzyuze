@@ -1,17 +1,30 @@
+// Flutter materyal tasarım kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Uygulama tema renklerini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Rezervasyon veri modelini içe aktarıyoruz.
 import '../../models/reservation.dart';
+// Kullanıcı bilgilerine erişmek için AuthProvider'ı içe aktarıyoruz.
 import '../../providers/auth_provider.dart';
+// Rezervasyonu sisteme kaydetmek için VehicleProvider'ı içe aktarıyoruz.
 import '../../providers/vehicle_provider.dart';
+// Özel buton bileşenini içe aktarıyoruz.
 import '../../widgets/custom_button.dart';
+// Özel metin kutusu bileşenini içe aktarıyoruz.
 import '../../widgets/custom_text_field.dart';
+// Logo bileşenini içe aktarıyoruz.
 import '../../widgets/sem_logo.dart';
+// Rezervasyon tamamlandığında dönülecek ana ekranı içe aktarıyoruz.
 import 'customer_main_screen.dart';
 
+/// Kullanıcının kredi kartı bilgilerini girdiği, sanal kart önizlemesini gördüğü ve rezervasyonu tamamladığı ödeme ekranı.
 class CheckoutScreen extends StatefulWidget {
+  /// Ödemesi yapılacak olan rezervasyon nesnesi
   final Reservation reservation;
 
+  /// CheckoutScreen kurucu metodu (Constructor)
   const CheckoutScreen({
     super.key,
     required this.reservation,
@@ -22,24 +35,35 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  /// Kart formu doğrulama anahtarı
   final _formKey = GlobalKey<FormState>();
 
+  /// Kart üzerindeki ad-soyad kontrolcüsü
   final _cardHolderController = TextEditingController();
+  
+  /// 16 haneli kredi kartı numarası kontrolcüsü
   final _cardNumberController = TextEditingController();
+  
+  /// Son kullanma tarihi (AA/YY) kontrolcüsü
   final _expiryDateController = TextEditingController();
+  
+  /// Güvenlik kodu (CVV) kontrolcüsü
   final _cvvController = TextEditingController();
 
+  /// Ödeme işleminin sürdüğünü belirten bayrak
   bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
+    // Giriş yapmış kullanıcının tam adını kart hamili alanına otomatik yerleştiriyoruz.
     final auth = Provider.of<AuthProvider>(context, listen: false);
     _cardHolderController.text = auth.currentUser?.fullName ?? 'MÜŞTERİ ADI';
   }
 
   @override
   void dispose() {
+    // Form denetleyicilerini bellekten siliyoruz.
     _cardHolderController.dispose();
     _cardNumberController.dispose();
     _expiryDateController.dispose();
@@ -47,32 +71,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  // Ödeme ve Rezervasyon Tamamlama
+  // ==========================================
+  // ÖDEME VE REZERVASYON TAMAMLAMA FONKSİYONU
+  // ==========================================
+  /// Kart bilgilerini doğrular, ödeme sürecini simüle eder ve aracı kiralandı olarak kaydeder.
   Future<void> _processPayment() async {
+    // Formda eksik/hatalı alan varsa durduruyoruz.
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // İşlem sürecini başlatıyoruz.
     setState(() => _isProcessing = true);
 
     final vehicleProvider = Provider.of<VehicleProvider>(context, listen: false);
 
-    // Mock rezervasyonu ekle ve bekle
+    // Rezervasyonu sisteme kaydediyoruz (1.2 saniye gecikme simülasyonu içerir).
     await vehicleProvider.addReservation(widget.reservation);
 
     if (!mounted) return;
     setState(() => _isProcessing = false);
 
-    // Başarılı Diyaloğu
+    // Rezervasyon başarılı bilgilendirme penceresini açıyoruz.
     _showSuccessDialog();
   }
 
+  // ==========================================
+  // BAŞARILI REZERVASYON AÇILIR PENCERESİ
+  // ==========================================
+  /// Kullanıcıya rezervasyonun onaylandığını duyuran ve ana sayfaya yönlendiren AlertDialog
   void _showSuccessDialog() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Kullanıcı zorunlu olarak butona basarak çıkmalıdır
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
@@ -80,6 +113,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 16),
+            // Başarılı yeşil onay dairesi ve ikonu
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -111,6 +145,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // Ödenen tutar bilgi kutusu
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -133,9 +168,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
             const SizedBox(height: 24),
+            // Ana Sayfaya Dönüş Butonu
             CustomElevatedButton(
               text: 'Ana Sayfaya Dön',
               onPressed: () {
+                // Önceki sayfaları temizleyip müşteri ana ekranına dönüyoruz.
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
                   (route) => false,
@@ -150,6 +187,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Tema parlaklığını alıyoruz.
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -186,15 +224,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Rezervasyon Özet Kartı
+                // ==========================================
+                // REZERVASYON ÖZET KARTI
+                // ==========================================
                 _buildSummaryCard(isDark),
                 const SizedBox(height: 24),
 
-                // Sanal Kredi Kartı Görseli
+                // ==========================================
+                // DİNAMİK SANAL KREDİ KARTI GÖRSELİ
+                // Form alanlarına yazıldıkça kart üzerindeki metinler anlık güncellenir.
+                // ==========================================
                 _buildVirtualCreditCard(isDark),
                 const SizedBox(height: 24),
 
-                // Kart Üzerindeki İsim
+                // ==========================================
+                // KART SAHİBİ AD SOYAD ALANI
+                // ==========================================
                 CustomTextField(
                   controller: _cardHolderController,
                   labelText: 'Kart Sahibinin Adı Soyadı',
@@ -207,7 +252,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Kart Numarası (16 Hane)
+                // ==========================================
+                // 16 HANELİ KREDİ KARTI NUMARASI ALANI
+                // ==========================================
                 CustomTextField(
                   controller: _cardNumberController,
                   labelText: 'Kart Numarası',
@@ -223,13 +270,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     }
                     return null;
                   },
+                  // Yazıldıkça sanal kartı güncellemek için setState
                   onChanged: (val) => setState(() {}),
                 ),
                 const SizedBox(height: 16),
 
-                // SKT ve CVV
+                // ==========================================
+                // SON KULLANMA TARİHİ VE CVV ALANLARI
+                // ==========================================
                 Row(
                   children: [
+                    // Son Kullanma Tarihi (AA/YY)
                     Expanded(
                       child: CustomTextField(
                         controller: _expiryDateController,
@@ -249,6 +300,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                     const SizedBox(width: 14),
+                    // Güvenlik Kodu (CVV / 3 Hane)
                     Expanded(
                       child: CustomTextField(
                         controller: _cvvController,
@@ -271,7 +323,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Ödeme Yap Butonu
+                // ==========================================
+                // ÖDEME ONAY BUTONU
+                // ==========================================
                 CustomElevatedButton(
                   text: '${widget.reservation.totalAmount.toStringAsFixed(0)} ₺ Ödemeyi Onayla',
                   isLoading: _isProcessing,
@@ -280,7 +334,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Güvenlik Rozeti
+                // ==========================================
+                // GÜVENLİK VE SSL SERTİFİKA ROZETİ
+                // ==========================================
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -306,6 +362,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // ==========================================
+  // REZERVASYON BİLGİ ÖZET KARTI
+  // ==========================================
+  /// Kiralanan aracın fotoğrafını, kiralama gün sayısını ve ücret dökümünü gösterir.
   Widget _buildSummaryCard(bool isDark) {
     final res = widget.reservation;
 
@@ -357,7 +417,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
           const Divider(height: 24),
+          // Günlük kira satırı
           _buildSummaryRow('Günlük Kira Bedeli:', '${res.dailyPrice.toStringAsFixed(0)} ₺ x ${res.totalDays} gün', isDark),
+          // Şehir dışı ek ücreti varsa gösteriyoruz
           if (res.isIntercity) ...[
             const SizedBox(height: 6),
             _buildSummaryRow(
@@ -368,6 +430,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ],
           const Divider(height: 24),
+          // Toplam tutar
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -390,6 +453,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  /// Özet tablosunda tek bir etiket-değer satırı oluşturan yardımcı metot
   Widget _buildSummaryRow(String label, String value, bool isDark, {bool isHighlight = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -416,8 +480,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // ==========================================
+  // SANAL KREDİ KARTI ÇİZİM METODU
+  // ==========================================
+  /// Kullanıcının girdiği kart numarası, isim ve son kullanma tarihini şık bir kart üzerinde canlı gösterir.
   Widget _buildVirtualCreditCard(bool isDark) {
     final rawNumber = _cardNumberController.text.replaceAll(' ', '');
+    // 16 hane olana kadar nokta ile tamamlayıp 4'erli bloklara ayırıyoruz
     final displayNum = rawNumber.isEmpty
         ? '•••• •••• •••• ••••'
         : rawNumber.padRight(16, '•').replaceAllMapped(RegExp(r'.{4}'), (match) => '${match.group(0)} ');
@@ -430,6 +499,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       height: 190,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
+        // Kart arka plan gradyanı
         gradient: const LinearGradient(
           colors: [Color(0xFF0052D4), Color(0xFF4364F7), Color(0xFF6FB1FC)],
           begin: Alignment.topLeft,
@@ -467,6 +537,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ],
           ),
+          // 16 haneli formatlanmış kart numarası
           Text(
             displayNum,
             style: const TextStyle(
@@ -477,6 +548,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fontFamily: 'Courier',
             ),
           ),
+          // Kart hamili ve son kullanma tarihi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

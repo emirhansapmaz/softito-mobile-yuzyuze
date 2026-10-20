@@ -1,16 +1,29 @@
+// Flutter materyal tasarım kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Uygulama renk paletini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Kimlik doğrulama Provider'ını içe aktarıyoruz.
 import '../../providers/auth_provider.dart';
+// Tema tercihi Provider'ını içe aktarıyoruz.
 import '../../providers/theme_provider.dart';
+// Özel buton bileşenlerini içe aktarıyoruz.
 import '../../widgets/custom_button.dart';
+// Özel form metin kutusu bileşenini içe aktarıyoruz.
 import '../../widgets/custom_text_field.dart';
+// Logo bileşenini içe aktarıyoruz.
 import '../../widgets/sem_logo.dart';
+// Giriş başarılı olunca yönlendirilecek Admin ekranını içe aktarıyoruz.
 import '../admin/admin_dashboard_screen.dart';
+// Giriş başarılı olunca yönlendirilecek Müşteri ana ekranını içe aktarıyoruz.
 import '../customer/customer_main_screen.dart';
+// Kayıt ol ekranını içe aktarıyoruz.
 import 'register_screen.dart';
 
+/// Kullanıcıların (Müşteri veya Admin) e-posta ve şifreyle sisteme giriş yaptığı ekran.
 class LoginScreen extends StatefulWidget {
+  /// LoginScreen kurucu metodu (Constructor)
   const LoginScreen({super.key});
 
   @override
@@ -18,37 +31,53 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  /// Formun geçerlilik (validation) kontrolünü sağlayan genel anahtar
   final _formKey = GlobalKey<FormState>();
+  
+  /// E-posta metin giriş denetleyicisi
   final _emailController = TextEditingController();
+  
+  /// Şifre metin giriş denetleyicisi
   final _passwordController = TextEditingController();
 
+  /// Şifrenin gizli mi (noktalı) yoksa görünür mü olduğunu belirten durum
   bool _isObscurePassword = true;
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için controller nesnelerini siliyoruz.
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // Giriş Yap İşlemi
+  // ==========================================
+  // GİRİŞ YAPMA FONKSİYONU
+  // ==========================================
+  /// Formu doğrular, kimlik doğrulama isteği gönderir ve kullanıcı rolüne göre ilgili ekrana yönlendirir.
   Future<void> _handleLogin() async {
+    // Form alanlarında hata varsa işlemi durduruyoruz.
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // Provider üzerinden auth servisine erişiyoruz (yeniden çizim tetiklememesi için listen: false).
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    // Giriş işlemini başlatıyoruz.
     final success = await authProvider.login(email: email, password: password);
 
+    // Giriş başarılı ve ekran hala açıksa rol kontrolü yapıyoruz.
     if (success && mounted) {
       if (authProvider.isAdmin) {
+        // Eğer kullanıcı Admin ise Admin Yönetim Paneline yönlendiriyoruz.
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
         );
       } else {
+        // Eğer kullanıcı normal Müşteri ise Müşteri Ana Ekranına yönlendiriyoruz.
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
         );
@@ -56,7 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Test Kolaylığı İçin Hızlı Doldurma
+  // ==========================================
+  // HIZLI DOLDURMA YARDIMCISI (ÖDEV/TEST İÇİN)
+  // ==========================================
+  /// Değerlendiren kişinin hızlıca Admin veya Müşteri olarak giriş yapabilmesi için form alanlarını doldurur.
   void _fillQuickCredentials({required bool isAdmin}) {
     setState(() {
       if (isAdmin) {
@@ -71,11 +103,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Aktif tema durumunu sorguluyoruz.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
+      // Üst uygulama çubuğu: Logo ve tema değiştirme butonu
       appBar: AppBar(
         title: const SemLogo(fontSize: 22),
         actions: [
@@ -98,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo ve Karşılama
+                  // Ortalanmış SEM Auto Logosu ve Slogan
                   const Center(
                     child: SemLogo(
                       fontSize: 38,
@@ -107,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Başlık Kartı
+                  // Başlık ve karşılama açıklaması
                   Text(
                     'Hesabınıza Giriş Yapın',
                     style: TextStyle(
@@ -126,7 +160,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // E-posta Alanı
+                  // ==========================================
+                  // E-POSTA GİRİŞ ALANI
+                  // ==========================================
                   CustomTextField(
                     controller: _emailController,
                     labelText: 'E-posta Adresi',
@@ -134,6 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
+                    // E-posta regex doğrulaması
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
                         return 'E-posta adresi boş bırakılamaz';
@@ -146,7 +183,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Şifre Alanı
+                  // ==========================================
+                  // ŞİFRE GİRİŞ ALANI
+                  // ==========================================
                   CustomTextField(
                     controller: _passwordController,
                     labelText: 'Şifre',
@@ -154,6 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icons.lock_outline_rounded,
                     obscureText: _isObscurePassword,
                     textInputAction: TextInputAction.done,
+                    // Şifreyi göster/gizle ikonu
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isObscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -163,6 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         setState(() => _isObscurePassword = !_isObscurePassword);
                       },
                     ),
+                    // Şifre uzunluk kontrolü
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
                         return 'Şifre boş bırakılamaz';
@@ -175,7 +216,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Giriş Yap Butonu
+                  // ==========================================
+                  // GİRİŞ YAP BUTONU
+                  // ==========================================
                   CustomElevatedButton(
                     text: 'Giriş Yap',
                     isLoading: authProvider.isLoading,
@@ -184,7 +227,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Kayıt Ol Butonu
+                  // ==========================================
+                  // KAYIT OL BUTONU (Yeni kullanıcılar için)
+                  // ==========================================
                   CustomOutlinedButton(
                     text: 'Hesabınız Yok mu? Kayıt Olun',
                     onPressed: () {
@@ -196,7 +241,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Test & Değerlendirme İçin Hızlı Giriş Rozeti
+                  // ==========================================
+                  // HIZLI TEST / DEĞERLENDİRME BİLGİ KUTUSU
+                  // ==========================================
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -230,6 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 10),
                         Row(
                           children: [
+                            // Hızlı Müşteri Butonu
                             Expanded(
                               child: InkWell(
                                 onTap: () => _fillQuickCredentials(isAdmin: false),
@@ -259,6 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
+                            // Hızlı Admin Butonu
                             Expanded(
                               child: InkWell(
                                 onTap: () => _fillQuickCredentials(isAdmin: true),

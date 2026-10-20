@@ -1,18 +1,28 @@
+// Flutter materyal tasarım kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Uygulama renk paletini içe aktarıyoruz.
 import '../core/theme/app_colors.dart';
+// Kullanıcı sözleşmesi metnini barındıran MockData sınıfını içe aktarıyoruz.
 import '../data/mock_data.dart';
+// Özel buton bileşenlerini içe aktarıyoruz.
 import 'custom_button.dart';
 
+/// Kullanıcıya kiralama öncesinde sözleşme metnini alttan açılır pencere (BottomSheet) olarak gösteren sınıf.
 class ContractDialog {
+  /// Sözleşme penceresini ekranda açar ve kullanıcının onaylayıp (true) onaylamadığını (false/null) döndürür.
   static Future<bool?> show(BuildContext context) {
+    // Koyu tema kontrolü
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return showModalBottomSheet<bool>(
       context: context,
+      // Sayfa yüksekliğinin dinamik ayarlanabilmesi için kaydırılabilir yapıyı açıyoruz.
       isScrollControlled: true,
+      // Dış kenarların şeffaf olması (yuvarlatılmış köşelerin düzgün görünmesi için)
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
+          // Ekran yüksekliğinin %82'sini kaplayacak şekilde boyutlandırıyoruz.
           height: MediaQuery.of(context).size.height * 0.82,
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
@@ -20,7 +30,9 @@ class ContractDialog {
           ),
           child: Column(
             children: [
-              // Üst çekme çubuğu
+              // ==========================================
+              // ÜST TUTAMAK ÇUBUĞU (Modal Drag Handle)
+              // ==========================================
               const SizedBox(height: 12),
               Container(
                 width: 40,
@@ -32,11 +44,14 @@ class ContractDialog {
               ),
               const SizedBox(height: 16),
 
-              // Başlık
+              // ==========================================
+              // DİYALOG BAŞLIK ALANI
+              // ==========================================
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
+                    // Sözleşme ikonu kutusu
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -50,6 +65,7 @@ class ContractDialog {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Başlık ve alt başlık metinleri
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,6 +88,7 @@ class ContractDialog {
                         ],
                       ),
                     ),
+                    // Kapatma (Çarpı) butonu: false döndürerek kapatır.
                     IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: () => Navigator.of(context).pop(false),
@@ -80,9 +97,12 @@ class ContractDialog {
                 ),
               ),
 
+              // Başlık ile metin arasındaki ayırıcı çizgi
               const Divider(height: 24),
 
-              // Sözleşme Metni
+              // ==========================================
+              // KAYDIRILABİLİR SÖZLEŞME METNİ
+              // ==========================================
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -95,6 +115,7 @@ class ContractDialog {
                         color: isDark ? AppColors.borderDark : AppColors.borderLight,
                       ),
                     ),
+                    // Mock veriden gelen sözleşme metnini basıyoruz.
                     child: Text(
                       MockData.userAgreementText,
                       style: TextStyle(
@@ -107,13 +128,16 @@ class ContractDialog {
                 ),
               ),
 
-              // Alt Butonlar
+              // ==========================================
+              // ALT AKSİYON BUTONLARI (Vazgeç / Onaylıyorum)
+              // ==========================================
               SafeArea(
                 top: false,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
                   child: Row(
                     children: [
+                      // Vazgeç Butonu: false değeri ile pencereyi kapatır.
                       Expanded(
                         child: CustomOutlinedButton(
                           text: 'Vazgeç',
@@ -122,6 +146,7 @@ class ContractDialog {
                         ),
                       ),
                       const SizedBox(width: 12),
+                      // Onaylıyorum Butonu: true değeri ile sözleşmeyi kabul ettirir.
                       Expanded(
                         child: CustomElevatedButton(
                           text: 'Onaylıyorum',

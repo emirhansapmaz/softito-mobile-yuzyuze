@@ -1,14 +1,24 @@
+// Flutter materyal arayüz kütüphanesini içe aktarıyoruz.
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz.
 import 'package:provider/provider.dart';
+// Tema renk paletini içe aktarıyoruz.
 import '../../core/theme/app_colors.dart';
+// Araç modelini içe aktarıyoruz.
 import '../../models/car.dart';
+// Araç ekleme ve güncelleme işlemlerini yapacak VehicleProvider'ı içe aktarıyoruz.
 import '../../providers/vehicle_provider.dart';
+// Özel buton bileşenini içe aktarıyoruz.
 import '../../widgets/custom_button.dart';
+// Özel metin kutusu bileşenini içe aktarıyoruz.
 import '../../widgets/custom_text_field.dart';
 
+/// Yöneticinin sisteme yeni bir araç eklemesini veya mevcut bir aracın özelliklerini güncellemesini sağlayan form ekranı.
 class AdminAddEditVehicleScreen extends StatefulWidget {
+  /// Düzenlenecek araç nesnesi (Yeni araç ekleniyorsa null'dur)
   final Car? carToEdit;
 
+  /// AdminAddEditVehicleScreen kurucu metodu (Constructor)
   const AdminAddEditVehicleScreen({super.key, this.carToEdit});
 
   @override
@@ -16,8 +26,10 @@ class AdminAddEditVehicleScreen extends StatefulWidget {
 }
 
 class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
+  /// Form geçerlilik kontrolü anahtarı
   final _formKey = GlobalKey<FormState>();
 
+  /// Form alanları için metin kontrolcüleri
   late TextEditingController _brandController;
   late TextEditingController _modelController;
   late TextEditingController _yearController;
@@ -27,17 +39,27 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
   late TextEditingController _rangeController;
   late TextEditingController _imageUrlController;
 
+  /// Seçili kategori kimliği (Varsayılan: 'basic')
   String _selectedCategoryId = 'basic';
+  
+  /// Seçili vites türü (Varsayılan: 'Otomatik')
   String _selectedTransmission = 'Otomatik';
+  
+  /// Seçili yakıt türü (Varsayılan: 'Benzin')
   String _selectedFuelType = 'Benzin';
+  
+  /// Yakıt doluluk oranı kaydırıcı değeri (0.10 ile 1.0 arası)
   double _fuelLevel = 0.80;
 
+  /// Ekranın düzenleme mi yoksa yeni ekleme modunda mı olduğunu belirten getter
   bool get isEditing => widget.carToEdit != null;
 
   @override
   void initState() {
     super.initState();
     final car = widget.carToEdit;
+
+    // Eğer düzenleme modundaysak mevcut araç verileriyle, değilse varsayılan değerlerle başlatıyoruz.
     _brandController = TextEditingController(text: car?.brand ?? '');
     _modelController = TextEditingController(text: car?.model ?? '');
     _yearController = TextEditingController(text: car != null ? '${car.year}' : '2024');
@@ -60,6 +82,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
 
   @override
   void dispose() {
+    // Form denetleyicilerini bellekten siliyoruz.
     _brandController.dispose();
     _modelController.dispose();
     _yearController.dispose();
@@ -71,11 +94,16 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
     super.dispose();
   }
 
+  // ==========================================
+  // ARACI KAYDETME / GÜNCELLEME İŞLEMİ
+  // ==========================================
+  /// Formu denetler, yeni veya güncellenmiş Car nesnesini oluşturup Provider'a iletir.
   void _saveVehicle() {
     if (!_formKey.currentState!.validate()) return;
 
     final vp = Provider.of<VehicleProvider>(context, listen: false);
 
+    // Form alanlarından Car nesnesini inşa ediyoruz.
     final car = Car(
       id: widget.carToEdit?.id ?? 'c_${DateTime.now().millisecondsSinceEpoch}',
       brand: _brandController.text.trim(),
@@ -96,17 +124,20 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
     );
 
     if (isEditing) {
+      // Düzenleme modundaysak mevcut aracı güncelliyoruz.
       vp.updateCar(car);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Araç başarıyla güncellendi!'), backgroundColor: AppColors.success),
       );
     } else {
+      // Yeni araç modundaysak filoya ekliyoruz.
       vp.addCar(car);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Yeni araç başarıyla filoya eklendi!'), backgroundColor: AppColors.success),
       );
     }
 
+    // Form ekranını kapatıp önceki sayfaya dönüyoruz.
     Navigator.of(context).pop();
   }
 
@@ -131,9 +162,12 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Marka & Model
+                // ==========================================
+                // MARKA VE MODEL GİRİŞ ALANLARI
+                // ==========================================
                 Row(
                   children: [
+                    // Marka Kutusu
                     Expanded(
                       child: CustomTextField(
                         controller: _brandController,
@@ -144,6 +178,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Model Kutusu
                     Expanded(
                       child: CustomTextField(
                         controller: _modelController,
@@ -157,7 +192,9 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Kategori Seçimi
+                // ==========================================
+                // ARAÇ KATEGORİSİ SEÇİMİ (Dropdown)
+                // ==========================================
                 DropdownButtonFormField<String>(
                   initialValue: _selectedCategoryId,
                   decoration: InputDecoration(
@@ -177,9 +214,12 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Yıl ve Plaka
+                // ==========================================
+                // MODEL YILI VE PLAKA
+                // ==========================================
                 Row(
                   children: [
+                    // Model Yılı
                     Expanded(
                       child: CustomTextField(
                         controller: _yearController,
@@ -191,6 +231,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Plaka Numarası
                     Expanded(
                       child: CustomTextField(
                         controller: _plateController,
@@ -204,9 +245,12 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Günlük Fiyat & Kilometre
+                // ==========================================
+                // GÜNLÜK KİRA BEDELİ VE MEVCUT KİLOMETRE
+                // ==========================================
                 Row(
                   children: [
+                    // Günlük Fiyat (TL)
                     Expanded(
                       child: CustomTextField(
                         controller: _dailyPriceController,
@@ -218,6 +262,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Kilometre
                     Expanded(
                       child: CustomTextField(
                         controller: _kmController,
@@ -232,9 +277,12 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Şanzıman ve Yakıt Tipi
+                // ==========================================
+                // ŞANZIMAN VE YAKIT TİPİ SEÇİMLERİ (Dropdown)
+                // ==========================================
                 Row(
                   children: [
+                    // Vites (Otomatik / Manuel)
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         initialValue: _selectedTransmission,
@@ -252,6 +300,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Yakıt Türü (Benzin / Dizel / LPG / Elektrik)
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         initialValue: _selectedFuelType,
@@ -272,7 +321,9 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Tahmini Menzil
+                // ==========================================
+                // TAHMİNİ MENZİL ALANI (KM)
+                // ==========================================
                 CustomTextField(
                   controller: _rangeController,
                   labelText: 'Tahmini Menzil (KM)',
@@ -283,7 +334,9 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Görsel URL
+                // ==========================================
+                // ARAÇ GÖRSEL BAĞLANTI ADRESİ (URL)
+                // ==========================================
                 CustomTextField(
                   controller: _imageUrlController,
                   labelText: 'Araç Görsel URL',
@@ -293,7 +346,9 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Yakıt Doluluk Sliderı
+                // ==========================================
+                // YAKIT SEVİYESİ KAYDIRICI (Slider)
+                // ==========================================
                 Text(
                   'Mevcut Yakıt Doluluk Oranı (%${(_fuelLevel * 100).toInt()})',
                   style: TextStyle(
@@ -313,7 +368,9 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Kaydet Butonu
+                // ==========================================
+                // KAYDET / GÜNCELLE BUTONU
+                // ==========================================
                 CustomElevatedButton(
                   text: isEditing ? 'Değişiklikleri Kaydet' : 'Filoya Ekle',
                   icon: isEditing ? Icons.save_rounded : Icons.add_circle_outline_rounded,
