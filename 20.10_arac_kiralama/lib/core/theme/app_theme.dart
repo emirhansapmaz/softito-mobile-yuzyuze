@@ -245,7 +245,6 @@ class AppTheme {
       
       // Koyu tema kart (Card) yapılandırması
       cardTheme: CardThemeData(
-        backgroundColor: AppColors.surfaceDark,
         color: AppColors.surfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(

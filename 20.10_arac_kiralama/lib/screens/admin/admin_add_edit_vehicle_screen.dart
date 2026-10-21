@@ -196,6 +196,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                 // ARAÇ KATEGORİSİ SEÇİMİ (Dropdown)
                 // ==========================================
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _selectedCategoryId,
                   decoration: InputDecoration(
                     labelText: 'Araç Kategorisi',
@@ -205,7 +206,10 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                   items: categories.map((cat) {
                     return DropdownMenuItem(
                       value: cat.id,
-                      child: Text('${cat.name} (${cat.description})'),
+                      child: Text(
+                        '${cat.name} (${cat.description})',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -285,6 +289,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                     // Vites (Otomatik / Manuel)
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: _selectedTransmission,
                         decoration: InputDecoration(
                           labelText: 'Şanzıman',
@@ -303,6 +308,7 @@ class _AdminAddEditVehicleScreenState extends State<AdminAddEditVehicleScreen> {
                     // Yakıt Türü (Benzin / Dizel / LPG / Elektrik)
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: _selectedFuelType,
                         decoration: InputDecoration(
                           labelText: 'Yakıt',
