@@ -1,25 +1,39 @@
+// Değiştirilemezlik ve liste eşitliği kontrolleri için foundation kütüphanesini içeri alıyoruz
 import 'package:flutter/foundation.dart';
 
-/// Mentorluk eşleşme talep durumu
+/// Mentorluk eşleşme talep durumu numaralandırması
 enum MatchStatus {
+  // Henüz talep gönderilmemiş durum
   none,
+  // Talep gönderilmiş onay bekleyen durum
   pending,
+  // Eşleşme kabul edilmiş ve mentor atanmış durum
   matched,
-}
+} // MatchStatus enum kapanışı
 
 /// Yörünge Platformu - Mentor Veri Modeli
 @immutable
 class MentorModel {
+  // Mentorun benzersiz kimliği
   final String id;
+  // Mentorun tam adı ve unvanı
   final String name;
+  // Görevi veya uzmanlık rolü
   final String title;
+  // Çalıştığı şirket veya kurucusu olduğu kurum
   final String company;
+  // Faaliyet gösterdiği dikey sektör (AI, Fintek vb.)
   final String sector;
+  // Uzmanlık alanları etiket listesi
   final List<String> expertise;
+  // Profil fotoğrafı internet bağlantı adresi
   final String imageUrl;
+  // Ana sayfada öne çıkarılan mentor mu bayrağı
   final bool isFeatured;
+  // Girişimci ile olan eşleşme talep durumu
   final MatchStatus matchStatus;
 
+  // MentorModel kurucu metodu
   const MentorModel({
     required this.id,
     required this.name,
@@ -30,8 +44,9 @@ class MentorModel {
     required this.imageUrl,
     this.isFeatured = false,
     this.matchStatus = MatchStatus.none,
-  });
+  }); // Kurucu metod kapanışı
 
+  // İstenilen alanları değiştirerek yeni kopya üreten copyWith metodu
   MentorModel copyWith({
     String? id,
     String? name,
@@ -53,9 +68,10 @@ class MentorModel {
       imageUrl: imageUrl ?? this.imageUrl,
       isFeatured: isFeatured ?? this.isFeatured,
       matchStatus: matchStatus ?? this.matchStatus,
-    );
-  }
+    ); // MentorModel dönüşü
+  } // copyWith metodu kapanışı
 
+  // İki mentor nesnesinin eşitliğini denetleyen metot
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -71,6 +87,7 @@ class MentorModel {
           isFeatured == other.isFeatured &&
           matchStatus == other.matchStatus;
 
+  // Özet kodunu üreten getter
   @override
   int get hashCode =>
       id.hashCode ^
@@ -82,4 +99,4 @@ class MentorModel {
       imageUrl.hashCode ^
       isFeatured.hashCode ^
       matchStatus.hashCode;
-}
+} // MentorModel sınıfı kapanışı
